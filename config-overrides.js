@@ -21,8 +21,8 @@ module.exports = function override(config, env) {
     "querystring": require.resolve("querystring-es3")
   };
 
-  env = 'development';
   
+
   // Add proxy for API requests
   if (env === 'development') {
     config.devServer = {
