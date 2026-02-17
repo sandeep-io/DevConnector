@@ -8,7 +8,7 @@ import AppRoutes from './components/routing/Routes'
 // Redux
 import { Provider } from 'react-redux';
 import store from './store';
-import setAuthToken from './utils/setAuthToken';
+import { setAuthToken } from './actions/api';
 import { loadUser } from './actions/auth';
 
 if (localStorage.token) {

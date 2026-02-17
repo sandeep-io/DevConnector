@@ -3,7 +3,7 @@ import ReactDOM from 'react-dom/client';
 import App from './App';
 import { Provider } from 'react-redux';
 import store from './store';
-import setAuthToken from './utils/setAuthToken';
+import { setAuthToken } from './actions/api';
 import { loadUser } from './actions/auth';
 
 // If token exists, set auth header
