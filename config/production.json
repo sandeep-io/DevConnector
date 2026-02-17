@@ -1,0 +1,7 @@
+{
+  "mongoURI": "mongodb+srv://Sandy123:Sandy123@devconnector.ioliqjf.mongodb.net/devconnector",
+  "jwtSecret": "mysecrettoken",
+  "githubClientId": "Ov23liTTQqMQYJ3PkWCs",
+  "githubSecret":"7d4c597204233135a82b32a1a1cac2bea688b244"
+
+}
