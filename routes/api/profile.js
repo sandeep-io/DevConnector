@@ -191,7 +191,7 @@ router.put(
       company,
       location,
       from,
-      to,
+      to: to === '' ? null : to,
       current,
       description
     };
@@ -239,13 +239,15 @@ router.delete('/experience/:exp_id', auth, async (req, res) => {
 // @access   Private
 router.put(
   '/education',
-  auth,
-  check('school', 'School is required').notEmpty(),
-  check('degree', 'Degree is required').notEmpty(),
-  check('fieldofstudy', 'Field of study is required').notEmpty(),
-  check('from', 'From date is required and needs to be from the past')
-    .notEmpty()
-    .custom((value, { req }) => (req.body.to ? value < req.body.to : true)),
+  [
+    auth,
+    check('school', 'School is required').notEmpty(),
+    check('degree', 'Degree is required').notEmpty(),
+    check('fieldofstudy', 'Field of study is required').notEmpty(),
+    check('from', 'From date is required and needs to be from the past')
+      .notEmpty()
+      .custom((value, { req }) => (req.body.to ? value < req.body.to : true))
+  ],
   async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -255,7 +257,17 @@ router.put(
     try {
       const profile = await Profile.findOne({ user: req.user.id });
 
-      profile.education.unshift(req.body);
+      const { school, degree, fieldofstudy, from, to, current, description } = req.body;
+
+      profile.education.unshift({
+        school,
+        degree,
+        fieldofstudy,
+        from,
+        to: to === '' ? null : to,
+        current,
+        description
+      });
 
       await profile.save();
 
@@ -291,19 +303,48 @@ router.delete('/education/:edu_id', auth, async (req, res) => {
 // @access   Public
 router.get('/github/:username', async (req, res) => {
   try {
+    const username = req.params.username;
+    
+    if (!username) {
+      return res.status(400).json({ msg: 'GitHub username is required' });
+    }
+
     const uri = encodeURI(
-      `https://api.github.com/users/${req.params.username}/repos?per_page=5&sort=created:asc`
+      `https://api.github.com/users/${username}/repos?per_page=5&sort=created:asc`
     );
     const headers = {
       'user-agent': 'node.js',
       Authorization: `token ${config.get('githubToken')}`
     };
 
+    console.log('Fetching GitHub repos from:', uri);
+    console.log('Using token:', config.get('githubToken') ? 'Token exists' : 'NO TOKEN');
+    
     const gitHubResponse = await axios.get(uri, { headers });
     return res.json(gitHubResponse.data);
   } catch (err) {
-    console.error(err.message);
-    return res.status(404).json({ msg: 'No Github profile found' });
+    console.error('GitHub API Error:', err.message);
+    if (err.response) {
+      console.error('Status:', err.response.status);
+      console.error('Data:', err.response.data);
+      
+      // Handle 404 specifically - user not found
+      if (err.response.status === 404) {
+        return res.status(404).json({ 
+          msg: 'GitHub user not found. Please check the username in your profile.',
+          error: 'The GitHub username does not exist on GitHub.'
+        });
+      }
+      
+      // Handle rate limiting
+      if (err.response.status === 403) {
+        return res.status(403).json({ 
+          msg: 'GitHub API rate limit exceeded. Please try again later.',
+          error: err.response.data.message
+        });
+      }
+    }
+    return res.status(500).json({ msg: 'Server Error fetching GitHub repos' });
   }
 });
 
