@@ -7,7 +7,9 @@ const initialState = {};
 
 const middleware = [thunk];
 
-const store = createStore(rootReducer, initialState,
-    composeWithDevTools(applyMiddleware(...middleware)));
+// Apply middleware with DevTools support
+const composeEnhancers = composeWithDevTools(applyMiddleware(...middleware));
+
+const store = createStore(rootReducer, initialState, composeEnhancers);
 
 export default store;
